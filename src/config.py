@@ -1,3 +1,4 @@
+from functools import lru_cache
 from pydantic_settings import BaseSettings
 from datetime import timedelta
 
@@ -31,3 +32,8 @@ class AppConfig(BaseSettings):
 
     class Config:
         env_file = ".env"
+
+
+@lru_cache
+def get_app_config() -> AppConfig:
+    return AppConfig()
