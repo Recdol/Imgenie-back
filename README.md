@@ -37,10 +37,16 @@ pip install torch
    ```bash
    mkdir hub
    cd hub
-   git clone https://huggingface.co/datasets/RecDol/PLAYLIST
-   git clone https://huggingface.co/datasets/RecDol/faiss_index
-   git clone https://huggingface.co/datasets/RecDol/CsvFiles
+   git clone https://huggingface.co/datasets/RecDol/PLAYLIST_inference PLAYLIST
+   git clone https://huggingface.co/datasets/RecDol/faiss_index_inference faiss_index
    ```
+
+### 4️⃣ Load submodule
+
+```bash
+git submodule init
+git submodule update --recursive
+```
 
 ## 서버 실행
 

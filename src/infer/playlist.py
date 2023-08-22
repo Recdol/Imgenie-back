@@ -1,130 +1,100 @@
 import os
 import faiss
 import datasets
-import numpy as np
 from PIL import Image
-from io import BytesIO
-from typing import Tuple
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from huggingface_hub import Repository
-from typing import List, Optional
 from transformers import AutoImageProcessor, AutoModel, ViTImageProcessor, ViTModel
-from src.utils import create_dir
+from ..config import AppConfig
 
 
 class PlaylistIdExtractor:
-    def __init__(self, k: int, is_data_pull: bool):
+    def __init__(self, config: AppConfig, k: int, is_data_pull: bool):
+        self.config = config
         self.k = k
         self.is_data_pull = is_data_pull
 
-        self.set_path()
-        self.load_dataset()
-        self.load_model()
+        self._set_up_path(config)
+        self._load_dataset()
+        self._load_model(config)
 
-    def set_path(self):
-        # set and create base path
-        self.HUB_PATH = "./hub/"
-        create_dir(self.HUB_PATH)
-
+    def _set_up_path(self, config: AppConfig):
         # set model path
-        self.MODEL_REPO = f"Recdol/PL_Multilabel"
-
-        self.WEATHER_MODEL_VERSION = "weather-25_150958"
-        self.WEATHER_SUB = f"weather/{self.WEATHER_MODEL_VERSION}/{self.WEATHER_MODEL_VERSION}_huggingface"
-
-        self.SIT_MODEL_VERSION = "sit-25_133334"
-        self.SIT_SUB = f"sit/{self.SIT_MODEL_VERSION}/{self.SIT_MODEL_VERSION}_huggingface"
-
-        self.MOOD_MODEL_VERSION = "mood-25_144428"
-        self.MOOD_SUB = f"mood/{self.MOOD_MODEL_VERSION}/{self.MOOD_MODEL_VERSION}_huggingface"
+        self.WEATHER_SUB = f"weather/{config.weather_model_version}/{config.weather_model_version}_huggingface"
+        self.SIT_SUB = f"sit/{config.sit_model_version}/{config.sit_model_version}_huggingface"
+        self.MOOD_SUB = f"mood/{config.mood_model_version}/{config.mood_model_version}_huggingface"
 
         # set data path
-        self.DATA_PATH = os.path.join(self.HUB_PATH, "PLAYLIST")
-        self.mood_data_path = os.path.join(self.DATA_PATH, "mood")
-        self.sit_data_path = os.path.join(self.DATA_PATH, "sit")
-        self.weather_data_path = os.path.join(self.DATA_PATH, "weather")
+        self.DATA_PATH = os.path.join(config.hub_path, "PLAYLIST")
+        self.MOOD_DATA_PATH = os.path.join(self.DATA_PATH, "mood")
+        self.SIT_DATA_PATH = os.path.join(self.DATA_PATH, "sit")
+        self.WEATHER_DATA_PATH = os.path.join(self.DATA_PATH, "weather")
 
         # set faiss path
-        self.FAISS_PATH = os.path.join(self.HUB_PATH, "faiss_index")
+        self.FAISS_PATH = os.path.join(config.hub_path, "faiss_index")
+        self.WEATHER_FAISS_PATH = os.path.join(self.FAISS_PATH, f"weather/{config.weather_index_version}.index")
+        self.SIT_FAISS_PATH = os.path.join(self.FAISS_PATH, f"sit/{config.sit_index_version}.index")
+        self.MOOD_FAISS_PATH = os.path.join(self.FAISS_PATH, f"mood/{config.mood_index_version}.index")
 
-        self.WEATHER_INDEX_VERSION = "weather-25_150958"
-        self.WEATHER_FAISS_PATH = os.path.join(self.FAISS_PATH, f"weather/{self.WEATHER_INDEX_VERSION}.index")
-
-        self.SIT_INDEX_VERSION = "sit-25_133334"
-        self.SIT_FAISS_PATH = os.path.join(self.FAISS_PATH, f"sit/{self.SIT_INDEX_VERSION}.index")
-
-        self.MOOD_INDEX_VERSION = "mood-25_144428"
-        self.MOOD_FAISS_PATH = os.path.join(self.FAISS_PATH, f"mood/{self.MOOD_INDEX_VERSION}.index")
-
-    def load_index_file_path(self, path: str) -> str:
-        file_list = os.listdir(path)
-        for file in file_list:
-            if ".index" in file:
-                return os.path.join(path, file)
-
-    def read_dataset(self, data_dir: str) -> datasets.Dataset:
+    def _read_dataset(self, data_dir: str) -> Dataset:
         dir_list = os.listdir(data_dir)
 
-        dsets: List[Optional[datasets.Dataset]] = []
+        dsets: list[Dataset | DatasetDict] = []
         for dir in dir_list:
-            print("path", os.path.join(data_dir, dir))
-            cur_dataset = datasets.load_from_disk(os.path.join(data_dir, dir))
+            dataset_dir_path = os.path.join(data_dir, dir)
+            cur_dataset = datasets.load_from_disk(dataset_dir_path)
             dsets.append(cur_dataset)
 
-        dataset = datasets.concatenate_datasets(dsets)
-        return dataset
+        return datasets.concatenate_datasets(dsets)
 
-    def load_dataset(self):
+    def _load_dataset(self):
         if self.is_data_pull:
-            Repository(local_dir=self.DATA_PATH).git_pull()
-            Repository(local_dir=self.FAISS_PATH).git_pull()
+            try:
+                Repository(local_dir=self.DATA_PATH).git_pull()
+                Repository(local_dir=self.FAISS_PATH).git_pull()
+            except OSError:
+                # not installed lfs
+                pass
 
-        self.weather_dataset = self.read_dataset(self.weather_data_path)
+        self.weather_dataset = self._read_dataset(self.WEATHER_DATA_PATH)
         self.weather_dataset.load_faiss_index(index_name="embeddings", file=self.WEATHER_FAISS_PATH)
 
-        self.sit_dataset = self.read_dataset(self.sit_data_path)
+        self.sit_dataset = self._read_dataset(self.SIT_DATA_PATH)
         self.sit_dataset.load_faiss_index(index_name="embeddings", file=self.SIT_FAISS_PATH)
 
-        self.mood_dataset = self.read_dataset(self.mood_data_path)
+        self.mood_dataset = self._read_dataset(self.MOOD_DATA_PATH)
         self.mood_dataset.load_faiss_index(index_name="embeddings", file=self.MOOD_FAISS_PATH)
 
-    def load_model(self):
-        self.weather_processor = AutoImageProcessor.from_pretrained(self.MODEL_REPO, subfolder=self.WEATHER_SUB)
-        self.weather_model = AutoModel.from_pretrained(self.MODEL_REPO, subfolder=self.WEATHER_SUB)
+    def _load_model(self, config: AppConfig):
+        self.weather_processor = AutoImageProcessor.from_pretrained(config.model_repo, subfolder=self.WEATHER_SUB)
+        self.weather_model = AutoModel.from_pretrained(config.model_repo, subfolder=self.WEATHER_SUB)
 
-        self.sit_processor = AutoImageProcessor.from_pretrained(self.MODEL_REPO, subfolder=self.SIT_SUB)
-        self.sit_model = AutoModel.from_pretrained(self.MODEL_REPO, subfolder=self.SIT_SUB)
+        self.sit_processor = AutoImageProcessor.from_pretrained(config.model_repo, subfolder=self.SIT_SUB)
+        self.sit_model = AutoModel.from_pretrained(config.model_repo, subfolder=self.SIT_SUB)
 
-        self.mood_processor = AutoImageProcessor.from_pretrained(self.MODEL_REPO, subfolder=self.MOOD_SUB)
-        self.mood_model = AutoModel.from_pretrained(self.MODEL_REPO, subfolder=self.MOOD_SUB)
+        self.mood_processor = AutoImageProcessor.from_pretrained(config.model_repo, subfolder=self.MOOD_SUB)
+        self.mood_model = AutoModel.from_pretrained(config.model_repo, subfolder=self.MOOD_SUB)
 
-    def decode_input_image(self, encoded_image) -> Image:
-        pil_image = Image.open(BytesIO(encoded_image.file.read()))
-        return pil_image
-
-    def get_weather_playlist_id(self, image_path: str) -> list[int]:
-        # pil_image = self.decode_input_image(image)
+    def get_weather_playlist_id(self, image_path: str) -> tuple[list[float], list]:
         pil_image = Image.open(image_path)
-        scores, retrieved_examples = self.get_similar_images_topk(
+        scores, retrieved_examples = self._get_similar_images_topk(
             pil_image, self.weather_processor, self.weather_model, self.weather_dataset, k=self.k
         )
-        return list(scores), [retrieved_examples["playlist_id"][i] for i in range(self.k)]
+        return scores, [retrieved_examples["playlist_id"][i] for i in range(self.k)]
 
-    def get_sit_playlist_id(self, image_path: str) -> list[int]:
-        # pil_image = self.decode_input_image(image)
+    def get_sit_playlist_id(self, image_path: str) -> tuple[list[float], list]:
         pil_image = Image.open(image_path)
-        scores, retrieved_examples = self.get_similar_images_topk(pil_image, self.sit_processor, self.sit_model, self.sit_dataset, k=self.k)
-        return list(scores), [retrieved_examples["playlist_id"][i] for i in range(self.k)]
+        scores, retrieved_examples = self._get_similar_images_topk(pil_image, self.sit_processor, self.sit_model, self.sit_dataset, k=self.k)
+        return scores, [retrieved_examples["playlist_id"][i] for i in range(self.k)]
 
-    def get_mood_playlist_id(self, image_path: str) -> list[int]:
-        # pil_image = self.decode_input_image(image)
+    def get_mood_playlist_id(self, image_path: str) -> tuple[list[float], list]:
         pil_image = Image.open(image_path)
-        scores, retrieved_examples = self.get_similar_images_topk(pil_image, self.mood_processor, self.mood_model, self.mood_dataset, k=self.k)
-        return list(scores), [retrieved_examples["playlist_id"][i] for i in range(self.k)]
+        scores, retrieved_examples = self._get_similar_images_topk(pil_image, self.mood_processor, self.mood_model, self.mood_dataset, k=self.k)
+        return scores, [retrieved_examples["playlist_id"][i] for i in range(self.k)]
 
-    def get_similar_images_topk(
+    def _get_similar_images_topk(
         self, query_image: Image, processor: ViTImageProcessor, model: ViTModel, dataset: Dataset, k: int
-    ) -> Tuple[np.ndarray, dict]:
+    ) -> tuple[list[float], dict]:
         query_embedding = model(**processor(query_image, return_tensors="pt"))
         query_embedding = query_embedding.last_hidden_state[:, 0].detach().numpy()
         faiss.normalize_L2(query_embedding)
