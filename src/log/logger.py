@@ -1,4 +1,4 @@
-from functools import lru_cache
+from functools import cache
 import logging
 import logging.config
 from ..utils import create_dir
@@ -79,20 +79,21 @@ create_dir(OUTPUT_PATH)
 logging.config.dictConfig(logger_config)
 
 
-@lru_cache
+@cache
 def get_fastapi_logger() -> logging.Logger:
     return logging.getLogger("fastapi")
 
 
-@lru_cache
+@cache
 def get_user_logger() -> logging.Logger:
     return logging.getLogger("user")
 
 
-@lru_cache
+@cache
 def get_feedback_logger() -> logging.Logger:
     return logging.getLogger("feedback")
 
 
+@cache
 def get_spotify_logger() -> logging.Logger:
     return logging.getLogger("spotify")
