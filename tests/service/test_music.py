@@ -4,7 +4,7 @@ from datetime import datetime, date
 from logging import Logger
 from src.services.music import MusicService
 from src.config import AppConfig
-from src.db import PlaylistRepository, Song, Album, Artist
+from src.db import PlaylistRepository, Song, Album, Artist, User
 from src.infer.playlist import PlaylistIdExtractor
 from src.infer.song import SongExtractor
 from src.dto.request import RecommendMusicRequest
@@ -18,12 +18,27 @@ class TestMusicService(unittest.TestCase):
         self.playlist_id_ext: PlaylistIdExtractor = Mock()
         self.song_ext: SongExtractor = Mock()
 
-        self.music_service = MusicService(self.user_logger, self.playlist_repository, self.playlist_id_ext, self.song_ext)
+        self.music_service = MusicService(
+            self.app_config,
+            self.user_logger,
+            self.playlist_repository,
+            self.playlist_id_ext,
+            self.song_ext,
+        )
 
     def mock_api_functions_of_playlist_id_ext(self):
-        self.playlist_id_ext.get_weather_playlist_id.return_value = ([0.1] * 15, list(range(1, 16)))
-        self.playlist_id_ext.get_mood_playlist_id.return_value = ([0.1] * 15, list(range(3, 18)))
-        self.playlist_id_ext.get_sit_playlist_id.return_value = ([0.1] * 15, list(range(5, 20)))
+        self.playlist_id_ext.get_weather_playlist_id.return_value = (
+            [0.1] * 15,
+            list(range(1, 16)),
+        )
+        self.playlist_id_ext.get_mood_playlist_id.return_value = (
+            [0.1] * 15,
+            list(range(3, 18)),
+        )
+        self.playlist_id_ext.get_sit_playlist_id.return_value = (
+            [0.1] * 15,
+            list(range(5, 20)),
+        )
 
     def mock_api_functions_of_song_ext(self):
         songs = []
@@ -62,16 +77,17 @@ class TestMusicService(unittest.TestCase):
             songs.append(song)
         self.song_ext.extract_songs.return_value = songs
 
-    @patch("src.services.music.save_file", autospec=True)
-    @patch("src.services.music.resize_img")
-    def test_recommend_music(self, resize_img, save_file):
+    @patch.object(MusicService, "_save_query_image")
+    @patch.object(MusicService, "_resize_query_image")
+    def test_recommend_music(self, resize_query_image, save_query_image):
         self.mock_api_functions_of_playlist_id_ext()
         self.mock_api_functions_of_song_ext()
 
+        user = User(id="id")
         image = Mock()
         data = RecommendMusicRequest(genres=["POP", "락"])
 
-        response = self.music_service.recommend_music(image, data)
+        response = self.music_service.recommend_music(user, image, data)
 
-        self.assertIsNotNone(response.session_id)
+        self.assertIsNotNone(response.user_id)
         self.assertIsNotNone(response.songs)
