@@ -1,4 +1,4 @@
-from typing import Type, TypeVar
+from typing import Type, TypeVar, Callable
 
 from ...db import (
     AlbumRepository,
@@ -20,5 +20,8 @@ Repository = TypeVar(
 )
 
 
-def get_repository(repo_type: Type[Repository]) -> Repository:
-    return repo_type()
+def get_repository(repo_type: Type[Repository]) -> Callable[[], Repository]:
+    def _get_repo() -> Repository:
+        return repo_type()
+
+    return _get_repo
