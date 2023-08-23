@@ -52,7 +52,7 @@ class MusicService:
 
         self.user_logger.info(
             {
-                "session_id": user.id,
+                "User Id": user.id,
                 "Img Path": img_path,
                 "Genres": data.genres,
                 "Playlist IDs": pl_genie_ids,
@@ -60,7 +60,7 @@ class MusicService:
             }
         )
 
-        return RecommendMusicResponse(session_id=user.id, songs=songs)
+        return RecommendMusicResponse(user_id=user.id, songs=songs)
 
     def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []
