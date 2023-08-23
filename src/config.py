@@ -31,6 +31,7 @@ class AppConfig(BaseSettings):
     mood_index_version: str = "mood-25_144428"
 
     class Config:
+        frozen = True
         env_file = ".env"
 
 
