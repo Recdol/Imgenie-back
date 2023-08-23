@@ -18,4 +18,4 @@ async def recommend_music(
     user: User = Depends(get_current_user),
     music_service: MusicService = Depends(get_music_service),
 ) -> RecommendMusicResponse:
-    return music_service.recommend_music(image, data)
+    return music_service.recommend_music(user, image, data)

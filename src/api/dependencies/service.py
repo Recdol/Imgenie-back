@@ -28,6 +28,7 @@ def get_feedback_service(
 
 
 def get_music_service(
+    config: AppConfig = Depends(get_app_config),
     user_logger: Logger = Depends(get_user_logger),
     playlist_repository: PlaylistRepository = Depends(
         get_repository(PlaylistRepository)
@@ -35,4 +36,6 @@ def get_music_service(
     playlist_id_ext: PlaylistIdExtractor = Depends(get_playlist_id_extractor),
     song_ext: SongExtractor = Depends(get_song_extractor),
 ) -> MusicService:
-    return MusicService(user_logger, playlist_repository, playlist_id_ext, song_ext)
+    return MusicService(
+        config, user_logger, playlist_repository, playlist_id_ext, song_ext
+    )
