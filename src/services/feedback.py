@@ -1,10 +1,18 @@
+from logging import Logger
+
 from ..dto.request import UserFeedbackRequest
-from ..log.logger import get_feedback_logger
+from ..db import User
 
 
 class FeedbackService:
-    def __init__(self) -> None:
-        self.feedback_logger = get_feedback_logger()
+    def __init__(self, feedback_logger: Logger) -> None:
+        self.feedback_logger = feedback_logger
 
-    def log_user_feedback(self, data: UserFeedbackRequest) -> None:
-        self.feedback_logger.info({"session Id": data.session_id, "song Id": data.song_id, "is like": data.is_like})
+    def log_user_feedback(self, user: User, data: UserFeedbackRequest) -> None:
+        self.feedback_logger.info(
+            {
+                "User Id": user.id,
+                "song Id": data.song_id,
+                "is like": data.is_like,
+            }
+        )

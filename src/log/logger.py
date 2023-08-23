@@ -1,3 +1,4 @@
+from functools import cache
 import logging
 import logging.config
 from ..utils import create_dir
@@ -20,7 +21,11 @@ logger_config = {
         },
     },
     "handlers": {
-        "console": {"level": "DEBUG", "class": "logging.StreamHandler", "formatter": "basic"},
+        "console": {
+            "level": "DEBUG",
+            "class": "logging.StreamHandler",
+            "formatter": "basic",
+        },
         "user_file": {
             "level": "INFO",
             "class": "logging.handlers.RotatingFileHandler",
@@ -74,17 +79,21 @@ create_dir(OUTPUT_PATH)
 logging.config.dictConfig(logger_config)
 
 
+@cache
 def get_fastapi_logger() -> logging.Logger:
     return logging.getLogger("fastapi")
 
 
+@cache
 def get_user_logger() -> logging.Logger:
     return logging.getLogger("user")
 
 
+@cache
 def get_feedback_logger() -> logging.Logger:
     return logging.getLogger("feedback")
 
 
+@cache
 def get_spotify_logger() -> logging.Logger:
     return logging.getLogger("spotify")
