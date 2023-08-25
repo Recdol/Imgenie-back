@@ -30,6 +30,8 @@ class AppConfig(BaseSettings):
     sit_index_version: str = "sit-25_133334"
     mood_index_version: str = "mood-25_144428"
 
+    playlist_k: int = 6
+
     # image
     image_size: int = 224
 
