@@ -49,7 +49,7 @@ class MusicService:
 
         songs = [
             RecommendMusic(
-                song_id=int(song.genie_id),
+                song_id=song.id,
                 song_title=song.title,
                 artist_name=song.artist.name,
                 album_title=song.album.name,
