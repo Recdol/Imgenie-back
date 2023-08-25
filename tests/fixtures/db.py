@@ -14,6 +14,8 @@ from src.db import (
     InferenceFeedback,
     InferenceRepository,
     SongRepository,
+    UserRepository,
+    AuthRepository,
 )
 
 
@@ -107,4 +109,16 @@ def mock_inference_repository(inference: Inference) -> InferenceRepository:
 def mock_song_repository(song: Song) -> SongRepository:
     mock = MagicMock(spec=SongRepository)
     mock.find_by_genie_id.return_value = song
+    return mock
+
+
+@pytest.fixture
+def mock_user_repository() -> UserRepository:
+    mock = MagicMock(spec=UserRepository)
+    return mock
+
+
+@pytest.fixture
+def mock_auth_repository() -> AuthRepository:
+    mock = MagicMock(spec=AuthRepository)
     return mock
