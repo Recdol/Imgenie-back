@@ -58,7 +58,7 @@ class MusicService:
             for song in songs
         ]
 
-        self.inference_repository.create_inference(
+        inference = self.inference_repository.create_inference(
             user=user,
             query_image_url=img_path,
             query_genres=data.genres,
@@ -66,7 +66,7 @@ class MusicService:
             output_songs=songs,
         )
 
-        return RecommendMusicResponse(user_id=user.id, songs=songs)
+        return RecommendMusicResponse(inference_id=inference.id, songs=songs)
 
     def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []

@@ -10,5 +10,5 @@ class RecommendMusic(BaseModel):
 
 
 class RecommendMusicResponse(BaseModel):
-    user_id: str
+    inference_id: str
     songs: list[RecommendMusic]
