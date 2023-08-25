@@ -8,7 +8,12 @@ from ...services.feedback import FeedbackService
 from ...services.music import MusicService
 from ...infer.playlist import PlaylistIdExtractor
 from ...infer.song import SongExtractor
-from ...db import UserRepository, AuthRepository, PlaylistRepository
+from ...db import (
+    UserRepository,
+    AuthRepository,
+    PlaylistRepository,
+    InferenceRepository,
+)
 from ...config import AppConfig, get_app_config
 from ...log.logger import get_feedback_logger, get_user_logger
 
@@ -33,9 +38,17 @@ def get_music_service(
     playlist_repository: PlaylistRepository = Depends(
         get_repository(PlaylistRepository)
     ),
+    inference_repository: InferenceRepository = Depends(
+        get_repository(InferenceRepository)
+    ),
     playlist_id_ext: PlaylistIdExtractor = Depends(get_playlist_id_extractor),
     song_ext: SongExtractor = Depends(get_song_extractor),
 ) -> MusicService:
     return MusicService(
-        config, user_logger, playlist_repository, playlist_id_ext, song_ext
+        config,
+        user_logger,
+        playlist_repository,
+        inference_repository,
+        playlist_id_ext,
+        song_ext,
     )
