@@ -4,7 +4,7 @@ from datetime import datetime, date
 from logging import Logger
 from src.services.music import MusicService
 from src.config import AppConfig
-from src.db import PlaylistRepository, Song, Album, Artist, User
+from src.db import PlaylistRepository, InferenceRepository, Song, Album, Artist, User
 from src.infer.playlist import PlaylistIdExtractor
 from src.infer.song import SongExtractor
 from src.dto.request import RecommendMusicRequest
@@ -15,6 +15,7 @@ class TestMusicService(unittest.TestCase):
         self.app_config = AppConfig()
         self.user_logger: Logger = Mock()
         self.playlist_repository: PlaylistRepository = Mock()
+        self.inference_repository: InferenceRepository = Mock()
         self.playlist_id_ext: PlaylistIdExtractor = Mock()
         self.song_ext: SongExtractor = Mock()
 
@@ -22,6 +23,7 @@ class TestMusicService(unittest.TestCase):
             self.app_config,
             self.user_logger,
             self.playlist_repository,
+            self.inference_repository,
             self.playlist_id_ext,
             self.song_ext,
         )
