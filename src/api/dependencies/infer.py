@@ -9,9 +9,8 @@ from ...config import AppConfig, get_app_config
 @cache
 def get_playlist_id_extractor(
     config: AppConfig = Depends(get_app_config),
-    is_data_pull: bool = False,
 ) -> PlaylistIdExtractor:
-    return PlaylistIdExtractor(config, is_data_pull)
+    return PlaylistIdExtractor(config)
 
 
 @cache

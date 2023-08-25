@@ -9,9 +9,8 @@ from ..config import AppConfig
 
 
 class PlaylistIdExtractor:
-    def __init__(self, config: AppConfig, is_data_pull: bool):
+    def __init__(self, config: AppConfig):
         self.config = config
-        self.is_data_pull = is_data_pull
 
         self._set_up_path(config)
         self._load_dataset()
@@ -57,7 +56,7 @@ class PlaylistIdExtractor:
         return datasets.concatenate_datasets(dsets)
 
     def _load_dataset(self):
-        if self.is_data_pull:
+        if self.config.is_playlist_data_pull:
             try:
                 Repository(local_dir=self.DATA_PATH).git_pull()
                 Repository(local_dir=self.FAISS_PATH).git_pull()

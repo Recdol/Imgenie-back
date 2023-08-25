@@ -51,7 +51,7 @@ git submodule update --recursive
 ## 서버 실행
 
 > 만약 데이터를 새로 업데이트하고 싶다면?  
-> 저장소에서 새로 pull 받아올 수 있도록 src/services/music.py에서 |`is_data_pull=True`로 설정해주세요!
+> 저장소에서 새로 pull 받아올 수 있도록 .env에서 |`is_playlist_data_pull=True`로 설정해주세요!
 
 ### ⚙️ Run server for dev
 
