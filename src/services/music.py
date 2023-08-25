@@ -35,7 +35,7 @@ class MusicService:
         self.config = config
         self.user_logger = logger
         self.playlist_repository = playlist_repository
-        self.inference_respository = inference_respository
+        self.inference_repository = inference_respository
         self.playlist_id_ext = playlist_id_ext
         self.song_ext = song_ext
 
@@ -58,7 +58,7 @@ class MusicService:
             for song in songs
         ]
 
-        self.inference_respository.create_inference(
+        self.inference_repository.create_inference(
             user=user,
             query_image_url=img_path,
             query_genres=data.genres,
