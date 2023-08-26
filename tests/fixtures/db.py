@@ -16,6 +16,7 @@ from src.db import (
     SongRepository,
     UserRepository,
     AuthRepository,
+    PlaylistRepository,
 )
 
 
@@ -114,11 +115,14 @@ def mock_song_repository(song: Song) -> SongRepository:
 
 @pytest.fixture
 def mock_user_repository() -> UserRepository:
-    mock = MagicMock(spec=UserRepository)
-    return mock
+    return MagicMock(spec=UserRepository)
 
 
 @pytest.fixture
 def mock_auth_repository() -> AuthRepository:
-    mock = MagicMock(spec=AuthRepository)
-    return mock
+    return MagicMock(spec=AuthRepository)
+
+
+@pytest.fixture
+def mock_playlist_repository() -> PlaylistRepository:
+    return MagicMock(spec=PlaylistRepository)
