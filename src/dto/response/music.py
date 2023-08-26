@@ -2,7 +2,7 @@ from pydantic import BaseModel
 
 
 class RecommendMusic(BaseModel):
-    song_id: int
+    song_id: str
     song_title: str
     artist_name: str
     album_title: str
@@ -10,5 +10,5 @@ class RecommendMusic(BaseModel):
 
 
 class RecommendMusicResponse(BaseModel):
-    user_id: str
+    inference_id: str
     songs: list[RecommendMusic]

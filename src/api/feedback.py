@@ -15,4 +15,4 @@ async def user_feedback(
     user: User = Depends(get_current_user),
     feedback_service: FeedbackService = Depends(get_feedback_service),
 ) -> None:
-    feedback_service.log_user_feedback(user, data)
+    feedback_service.user_feedback(user, data)

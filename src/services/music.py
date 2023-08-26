@@ -7,7 +7,14 @@ from ..infer.playlist import PlaylistIdExtractor
 from ..infer.song import SongExtractor
 from ..dto.response import RecommendMusicResponse, RecommendMusic
 from ..dto.request import RecommendMusicRequest
-from ..db import User, Playlist, Song, PlaylistRepository, NotFoundPlaylistException
+from ..db import (
+    User,
+    Playlist,
+    Song,
+    PlaylistRepository,
+    InferenceRepository,
+    NotFoundPlaylistException,
+)
 from ..config import AppConfig
 
 
@@ -21,12 +28,14 @@ class MusicService:
         config: AppConfig,
         logger: Logger,
         playlist_repository: PlaylistRepository,
+        inference_respository: InferenceRepository,
         playlist_id_ext: PlaylistIdExtractor,
         song_ext: SongExtractor,
     ) -> None:
         self.config = config
         self.user_logger = logger
         self.playlist_repository = playlist_repository
+        self.inference_repository = inference_respository
         self.playlist_id_ext = playlist_id_ext
         self.song_ext = song_ext
 
@@ -36,12 +45,11 @@ class MusicService:
         img_path = self._save_query_image(user.id, image)
 
         playlists, pl_scores = self._extract_playlists(img_path)
-        pl_genie_ids = [playlist.genie_id for playlist in playlists]
         songs = self._extract_songs(data.genres, playlists, pl_scores, top_k)
 
         songs = [
             RecommendMusic(
-                song_id=int(song.genie_id),
+                song_id=song.id,
                 song_title=song.title,
                 artist_name=song.artist.name,
                 album_title=song.album.name,
@@ -50,17 +58,15 @@ class MusicService:
             for song in songs
         ]
 
-        self.user_logger.info(
-            {
-                "User Id": user.id,
-                "Img Path": img_path,
-                "Genres": data.genres,
-                "Playlist IDs": pl_genie_ids,
-                "Recommend Songs": songs,
-            }
+        inference = self.inference_repository.create_inference(
+            user=user,
+            query_image_url=img_path,
+            query_genres=data.genres,
+            output_playlists=playlists,
+            output_songs=songs,
         )
 
-        return RecommendMusicResponse(user_id=user.id, songs=songs)
+        return RecommendMusicResponse(inference_id=inference.id, songs=songs)
 
     def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []

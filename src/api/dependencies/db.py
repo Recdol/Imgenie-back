@@ -7,6 +7,7 @@ from ...db import (
     SongRepository,
     UserRepository,
     AuthRepository,
+    InferenceRepository,
 )
 
 Repository = TypeVar(
@@ -17,6 +18,7 @@ Repository = TypeVar(
     SongRepository,
     UserRepository,
     AuthRepository,
+    InferenceRepository,
 )
 
 
