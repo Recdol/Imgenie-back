@@ -27,7 +27,7 @@ jobs:
       - uses: actions/cache@v2
         with:
           path: ${{ env.pythonLocation }}
-          key: ${{ env.pythonLocation }}-seq-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}
+          key: ${{ env.pythonLocation }}-${{ hashFiles('setup.py') }}-${{ hashFiles('requirements.txt') }}
 
       - name: install dependencies 
         run: pip install -r requirements.txt
