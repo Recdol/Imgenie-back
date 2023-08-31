@@ -1,0 +1,52 @@
+name: Deploy back dev app
+
+on:
+  push:
+    branches: ["dev"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+
+      - name: Login to docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOKERHUB_USERNAME }}
+          password: ${{ secrets.DOKERHUB_PASSWORD }}
+
+      - name: Build and push to docker hub
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.dev
+          push: true
+          tags: recdolserver/imgenie-back-dev
+
+      - name: google auth
+        id: "auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GCE_SA_KEY }}"
+
+      - name: set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v1"
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+
+      - name: use gcloud cli
+        run: "gcloud info"
+
+      - name: gcp deploy
+        run: |-
+          gcloud compute instances update-container "${{ secrets.BACK_DEV_GCE_INSTANCE }}" \
+            --zone "${{ secrets.BACK_DEV_GCE_INSTANCE_ZONE }}" \
+            --container-image "docker.io/recdolserver/imgenie-back-dev"
+            --container-env PORT=80,DB_HOST="${{ secrets.BACK_DEV_DB_HOST }}",DB_NAME="${{ BACK_DEV_DB_NAME }}",DB_USERNAME="${{ BACK_DEV_DB_USERNAME }}",DB_PASSWORD="${{ BACK_DEV_DB_PASSWORD }}",JWT_SECRET="${{ BACK_DEV_JWT_SECRET }}"
+
+      - name: gcp reset
+        run: |-
+          gcloud compute instances reset "${{ secrets.BACK_DEV_GCE_INSTANCE }}" \
+            --zone "${{ secrets.back_DEV_GCE_INSTANCE_ZONE }}"
