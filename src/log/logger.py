@@ -1,7 +1,7 @@
 from functools import cache
 import logging
 import logging.config
-from ..utils import create_dir
+import os
 
 
 OUTPUT_PATH = "outputs/logs"
@@ -75,7 +75,7 @@ logger_config = {
     },
 }
 
-create_dir(OUTPUT_PATH)
+os.makedirs(OUTPUT_PATH, exist_ok=True)
 logging.config.dictConfig(logger_config)
 
 
