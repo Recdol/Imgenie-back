@@ -5,12 +5,9 @@ on:
     branches: [dev, main]
   push:
     branches: [dev, main]
-jobs: 
-  run_seq: 
-    name: test backend app
 
 jobs:
-  build:
+  test:
     runs-on: ubuntu-latest
 
     steps:
