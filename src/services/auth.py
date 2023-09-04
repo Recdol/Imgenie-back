@@ -42,7 +42,7 @@ class AuthService:
         auth: Auth = self.auth_repository.find_by_refresh_token(refresh_token)
 
         if not auth:
-            return InvalidTokenException(ErrorType.INVALID_TOKEN)
+            raise InvalidTokenException(ErrorType.INVALID_TOKEN)
 
         access_token = self.__encode_access_token(
             AccessTokenPayload(user_id=auth.user.id)
