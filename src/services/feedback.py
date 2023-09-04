@@ -12,7 +12,7 @@ class FeedbackService:
         self.song_repository = song_repository
 
     def user_feedback(self, user: User, request: UserFeedbackRequest) -> None:
-        song = self.song_repository.find_by_genie_id(request.song_id)
+        song = self.song_repository.find_by_id(request.song_id)
 
         if request.is_like:
             self.inference_repository.add_feedback_like_song_by_id(
