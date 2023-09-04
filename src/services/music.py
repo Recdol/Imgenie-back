@@ -47,7 +47,7 @@ class MusicService:
         playlists, pl_scores = self._extract_playlists(img_path)
         songs = self._extract_songs(data.genres, playlists, pl_scores, top_k)
 
-        songs = [
+        recommend_musics = [
             RecommendMusic(
                 song_id=song.id,
                 song_title=song.title,
@@ -62,11 +62,11 @@ class MusicService:
             user=user,
             query_image_url=img_path,
             query_genres=data.genres,
-            output_playlists=playlists,
-            output_songs=songs,
+            output_playlists=set(playlists),
+            output_songs=set(songs),
         )
 
-        return RecommendMusicResponse(inference_id=inference.id, songs=songs)
+        return RecommendMusicResponse(inference_id=inference.id, songs=recommend_musics)
 
     def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []
