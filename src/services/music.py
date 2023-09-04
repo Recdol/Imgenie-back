@@ -42,7 +42,7 @@ class MusicService:
     def recommend_music(
         self, user: User, image: UploadFile, data: RecommendMusicRequest
     ) -> RecommendMusicResponse:
-        img_path = self._save_query_image(user.id, image)
+        img_path = self._save_query_image(user, image)
 
         playlists, pl_scores = self._extract_playlists(img_path)
         songs = self._extract_songs(data.genres, playlists, pl_scores, top_k)
