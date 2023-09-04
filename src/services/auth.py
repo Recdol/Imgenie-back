@@ -9,7 +9,12 @@ from ..exceptions.error_type import ErrorType
 
 
 class AuthService:
-    def __init__(self, config: AppConfig, user_repository: UserRepository, auth_repository: AuthRepository) -> None:
+    def __init__(
+        self,
+        config: AppConfig,
+        user_repository: UserRepository,
+        auth_repository: AuthRepository,
+    ) -> None:
         self.config = config
         self.user_repository = user_repository
         self.auth_repository = auth_repository
@@ -23,7 +28,9 @@ class AuthService:
         user: User = self.user_repository.create_user()
 
         access_token = self.__encode_access_token(AccessTokenPayload(user_id=user.id))
-        refresh_token = self.__encode_refresh_token(RefreshTokenPayload(user_id=user.id))
+        refresh_token = self.__encode_refresh_token(
+            RefreshTokenPayload(user_id=user.id)
+        )
 
         self.auth_repository.create_auth(user, refresh_token)
 
@@ -34,8 +41,15 @@ class AuthService:
 
         auth: Auth = self.auth_repository.find_by_refresh_token(refresh_token)
 
-        access_token = self.__encode_access_token(AccessTokenPayload(user_id=auth.user.id))
-        new_refresh_token = self.__encode_refresh_token(RefreshTokenPayload(user_id=auth.user.id))
+        if not auth:
+            return InvalidTokenException(ErrorType.INVALID_TOKEN)
+
+        access_token = self.__encode_access_token(
+            AccessTokenPayload(user_id=auth.user.id)
+        )
+        new_refresh_token = self.__encode_refresh_token(
+            RefreshTokenPayload(user_id=auth.user.id)
+        )
 
         self.auth_repository.delete_by_id(auth.id)
         self.auth_repository.create_auth(auth.user, new_refresh_token)
@@ -60,8 +74,12 @@ class AuthService:
 
     def __encode_access_token(self, payload: AccessTokenPayload) -> str:
         access_token_exp = datetime.now() + self.config.access_token_exp_period
-        return encode_jwt(payload.model_dump(), exp=access_token_exp, secret=self.config.jwt_secret)
+        return encode_jwt(
+            payload.model_dump(), exp=access_token_exp, secret=self.config.jwt_secret
+        )
 
     def __encode_refresh_token(self, payload: AccessTokenPayload) -> str:
         refresh_token_exp = datetime.now() + self.config.refresh_token_exp_period
-        return encode_jwt(payload.model_dump(), exp=refresh_token_exp, secret=self.config.jwt_secret)
+        return encode_jwt(
+            payload.model_dump(), exp=refresh_token_exp, secret=self.config.jwt_secret
+        )
