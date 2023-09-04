@@ -44,7 +44,7 @@ def auth_service(
 @pytest.fixture
 def valid_access_token(auth_service: AuthService, logged_in_user: User) -> str:
     access_token_payload = AccessTokenPayload(user_id=logged_in_user.id)
-    return auth_service._AuthService__encode_access_token(access_token_payload)
+    return auth_service._encode_access_token(access_token_payload)
 
 
 @pytest.fixture
@@ -55,7 +55,7 @@ def invalid_access_token() -> str:
 @pytest.fixture
 def valid_refresh_token(auth_service: AuthService, logged_in_user: User) -> str:
     refresh_token_payload = RefreshTokenPayload(user_id=logged_in_user.id)
-    return auth_service._AuthService__encode_refresh_token(refresh_token_payload)
+    return auth_service._encode_refresh_token(refresh_token_payload)
 
 
 @pytest.fixture
@@ -91,8 +91,8 @@ def test_logged_in_user__if_the_access_token_is_not_valid_then_should_raise_Inva
 def test_signin(auth_service: AuthService, logged_in_user: User):
     access_token, refresh_token = auth_service.signin()
 
-    auth_service._AuthService__decode_access_token(access_token)
-    auth_service._AuthService__decode_refresh_token(refresh_token)
+    auth_service._decode_access_token(access_token)
+    auth_service._decode_refresh_token(refresh_token)
 
 
 def test_re_login(
@@ -104,18 +104,27 @@ def test_re_login(
     auth.refresh_token = valid_refresh_token
 
     access_token, new_refresh_token = auth_service.re_login(valid_refresh_token)
-    access_token_payload = auth_service._AuthService__decode_access_token(access_token)
+    access_token_payload = auth_service._decode_access_token(access_token)
 
     assert access_token_payload.user_id == logged_in_user.id
 
-    new_refresh_token_payload = auth_service._AuthService__decode_refresh_token(
-        new_refresh_token
-    )
+    new_refresh_token_payload = auth_service._decode_refresh_token(new_refresh_token)
     assert new_refresh_token_payload.user_id == logged_in_user.id
 
 
 def test_re_login__if_the_refresh_token_is_not_valid_then_should_raise_InvalidTokenException(
     auth_service: AuthService, invalid_refresh_token: str
 ):
+    with pytest.raises(InvalidTokenException):
+        auth_service.re_login(invalid_refresh_token)
+
+
+def test_re_login__if_the_refresh_token_not_exists_in_db_then_should_raise_InvalidTokenException(
+    auth_service: AuthService,
+    invalid_refresh_token: str,
+    mock_auth_repository: AuthRepository,
+):
+    mock_auth_repository.find_by_refresh_token.return_value = None
+
     with pytest.raises(InvalidTokenException):
         auth_service.re_login(invalid_refresh_token)
