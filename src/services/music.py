@@ -62,8 +62,8 @@ class MusicService:
             user=user,
             query_image_url=img_path,
             query_genres=data.genres,
-            output_playlists=playlists,
-            output_songs=songs,
+            output_playlists=set(playlists),
+            output_songs=set(songs),
         )
 
         return RecommendMusicResponse(inference_id=inference.id, songs=recommend_musics)
