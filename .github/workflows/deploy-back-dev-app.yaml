@@ -13,6 +13,12 @@ jobs:
         with:
           submodules: true
 
+      - name: Load datasets
+        run: |-
+          mkdir hub
+          git clone https://huggingface.co/datasets/RecDol/PLAYLIST_inference hub/PLAYLIST
+          git clone https://huggingface.co/datasets/RecDol/faiss_index_inference hub/faiss_index
+
       - name: Login to docker hub
         uses: docker/login-action@v2
         with:
