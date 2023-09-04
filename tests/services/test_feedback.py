@@ -1,5 +1,4 @@
 import pytest
-from logging import Logger
 from unittest.mock import MagicMock
 
 from src.services.feedback import FeedbackService
@@ -9,12 +8,12 @@ from src.dto.request import UserFeedbackRequest
 
 @pytest.fixture
 def feedback_service(
-    mock_logger: Logger,
     mock_inference_repository: InferenceRepository,
     mock_song_repository: SongRepository,
+    song: Song,
 ) -> FeedbackService:
+    mock_song_repository.find_by_id.return_value = song
     return FeedbackService(
-        feedback_logger=mock_logger,
         inference_repository=mock_inference_repository,
         song_repository=mock_song_repository,
     )
