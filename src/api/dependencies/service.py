@@ -13,6 +13,7 @@ from ...db import (
     AuthRepository,
     PlaylistRepository,
     InferenceRepository,
+    SongRepository,
 )
 from ...config import AppConfig, get_app_config
 from ...log.logger import get_feedback_logger, get_user_logger
@@ -28,8 +29,12 @@ def get_auth_service(
 
 def get_feedback_service(
     feedback_logger: Logger = Depends(get_feedback_logger),
+    inference_repository: InferenceRepository = Depends(
+        get_repository(InferenceRepository)
+    ),
+    song_repository: SongRepository = Depends(get_repository(SongRepository)),
 ) -> FeedbackService:
-    return FeedbackService(feedback_logger)
+    return FeedbackService(feedback_logger, inference_repository, song_repository)
 
 
 def get_music_service(
