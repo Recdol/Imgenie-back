@@ -14,6 +14,7 @@ jobs:
           submodules: true
 
       - name: Load datasets
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
         run: |-
           mkdir hub
           git clone https://huggingface.co/datasets/RecDol/PLAYLIST_inference hub/PLAYLIST
