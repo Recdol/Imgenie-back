@@ -1,5 +1,5 @@
 from fastapi import APIRouter, Depends, Response
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 
 from .dependencies.service import get_auth_service
 from .dependencies.auth import get_current_user
@@ -19,9 +19,8 @@ async def new_user(
     response.set_cookie(
         key="user_id",
         value=user.id,
-        secure=True,
         httponly=True,
-        expires=datetime(year=10),
+        expires=datetime.now(timezone.utc) + timedelta(days=365),
     )
 
 
