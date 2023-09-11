@@ -21,7 +21,7 @@ class AuthAPIKeyCookie(APIKeyCookie):
 
 
 def _get_user_id_cookie(
-    user_id: str = Security(AuthAPIKeyCookie(name=COOKIE_KEY)),
+    user_id: str = Security(AuthAPIKeyCookie(name="user_id")),
 ) -> str:
     return user_id
 
