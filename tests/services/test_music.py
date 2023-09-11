@@ -4,7 +4,14 @@ from unittest.mock import MagicMock, Mock, patch
 
 from src.services.music import MusicService
 from src.config import AppConfig
-from src.db import PlaylistRepository, InferenceRepository, Song, Playlist, User
+from src.db import (
+    PlaylistRepository,
+    InferenceRepository,
+    Song,
+    Playlist,
+    User,
+    Inference,
+)
 from src.infer.playlist import PlaylistIdExtractor
 from src.infer.song import SongExtractor
 from src.dto.request import RecommendMusicRequest
@@ -36,7 +43,10 @@ def music_service(
     mock_inference_repository: InferenceRepository,
     mock_playlist_id_extractor: PlaylistIdExtractor,
     mock_song_extractor: SongExtractor,
+    inference: Inference,
 ) -> MusicService:
+    mock_inference_repository.create_inference.return_value = inference
+
     with patch.object(MusicService, "_save_query_image"), patch.object(
         MusicService, "_resize_query_image"
     ):

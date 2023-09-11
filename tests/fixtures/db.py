@@ -101,9 +101,7 @@ def inference(user: User, song: Song, playlist: Playlist) -> Inference:
 
 @pytest.fixture
 def mock_inference_repository(inference: Inference) -> InferenceRepository:
-    mock = MagicMock(spec=InferenceRepository)
-    mock.create_inference.return_value = inference
-    return mock
+    return MagicMock(spec=InferenceRepository)
 
 
 @pytest.fixture
