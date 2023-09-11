@@ -1,6 +1,5 @@
 from functools import cache
 from pydantic_settings import BaseSettings
-from datetime import timedelta
 
 
 class AppConfig(BaseSettings):
@@ -10,11 +9,6 @@ class AppConfig(BaseSettings):
     db_name: str
     db_username: str
     db_password: str
-
-    # json web token
-    jwt_secret: str
-    access_token_exp_period: timedelta = timedelta(hours=1)
-    refresh_token_exp_period: timedelta = timedelta(days=1)
 
     # model
     hub_path: str = "./hub"
