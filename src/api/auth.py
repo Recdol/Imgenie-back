@@ -9,7 +9,7 @@ from ..services.auth import AuthService
 router = APIRouter()
 
 
-@router.post("/newUser")
+@router.get("/newUser")
 async def new_user(
     response: Response,
     auth_service: AuthService = Depends(get_auth_service),
