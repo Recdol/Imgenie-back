@@ -2,8 +2,8 @@ from fastapi import APIRouter, UploadFile, File, Depends
 
 from .dependencies.service import get_music_service
 from .dependencies.auth import get_current_user
-from ..dto.response import RecommendMusicResponse
-from ..dto.request import RecommendMusicRequest
+from ..dto.response.music import RecommendMusicResponse
+from ..dto.request.music import RecommendMusicRequest
 from ..services.music import MusicService
 from ..db import User
 

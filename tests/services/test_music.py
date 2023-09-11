@@ -14,7 +14,7 @@ from src.db import (
 )
 from src.infer.playlist import PlaylistIdExtractor
 from src.infer.song import SongExtractor
-from src.dto.request import RecommendMusicRequest
+from src.dto.request.music import RecommendMusicRequest
 
 
 @pytest.fixture

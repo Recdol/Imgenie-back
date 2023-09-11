@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from src.services.feedback import FeedbackService
 from src.db import User, Song, Inference, InferenceRepository, SongRepository
-from src.dto.request import UserFeedbackRequest
+from src.dto.request.feedback import UserFeedbackRequest
 
 
 @pytest.fixture

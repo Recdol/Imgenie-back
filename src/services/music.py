@@ -5,8 +5,8 @@ import os
 
 from ..infer.playlist import PlaylistIdExtractor
 from ..infer.song import SongExtractor
-from ..dto.response import RecommendMusicResponse, RecommendMusic
-from ..dto.request import RecommendMusicRequest
+from ..dto.response.music import RecommendMusicResponse, RecommendMusic
+from ..dto.request.music import RecommendMusicRequest
 from ..db import (
     User,
     Playlist,

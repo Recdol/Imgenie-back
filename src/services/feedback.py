@@ -1,4 +1,4 @@
-from ..dto.request import UserFeedbackRequest
+from ..dto.request.feedback import UserFeedbackRequest
 from ..db import User, Inference, InferenceRepository, SongRepository
 from ..exceptions.common import ForbiddenException
 from ..exceptions.error_type import ErrorType
