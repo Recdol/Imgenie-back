@@ -1,6 +1,6 @@
-from ..dto.request import UserFeedbackRequest
+from ..dto.request.feedback import UserFeedbackRequest
 from ..db import User, Inference, InferenceRepository, SongRepository
-from ..exceptions.auth import ForbiddenTokenException
+from ..exceptions.common import ForbiddenException
 from ..exceptions.error_type import ErrorType
 
 
@@ -26,5 +26,7 @@ class FeedbackService:
 
     @staticmethod
     def _validate_user(user: User, inference: Inference) -> None:
+        print(user, inference)
+
         if inference.user != user:
-            raise ForbiddenTokenException(error_type=ErrorType.FORBIDDEN_TOKEN)
+            raise ForbiddenException(error_type=ErrorType.FORBIDDEN_USER)

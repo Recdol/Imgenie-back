@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends
 
 from .dependencies.service import get_feedback_service
 from .dependencies.auth import get_current_user
-from ..dto.request import UserFeedbackRequest
+from ..dto.request.feedback import UserFeedbackRequest
 from ..services.feedback import FeedbackService
 from ..db import User
 

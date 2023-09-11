@@ -3,7 +3,7 @@ from unittest.mock import MagicMock
 
 from src.services.feedback import FeedbackService
 from src.db import User, Song, Inference, InferenceRepository, SongRepository
-from src.dto.request import UserFeedbackRequest
+from src.dto.request.feedback import UserFeedbackRequest
 
 
 @pytest.fixture
@@ -11,8 +11,12 @@ def feedback_service(
     mock_inference_repository: InferenceRepository,
     mock_song_repository: SongRepository,
     song: Song,
+    inference: Inference,
 ) -> FeedbackService:
+    mock_inference_repository.create_inference.return_value = inference
+    mock_inference_repository.find_by_id.return_value = inference
     mock_song_repository.find_by_id.return_value = song
+
     return FeedbackService(
         inference_repository=mock_inference_repository,
         song_repository=mock_song_repository,

@@ -1,26 +1,29 @@
-from fastapi import APIRouter, Depends
+from fastapi import APIRouter, Depends, Response
+from datetime import datetime, timedelta, timezone
 
 from .dependencies.service import get_auth_service
-from ..dto.request import ReLoginRequest
-from ..dto.response import SigninResponse, ReLoginResponse
+from .dependencies.auth import get_current_user
 from ..services.auth import AuthService
 
 
 router = APIRouter()
 
 
-@router.post("/signin")
-async def signin(
+@router.get("/newUser")
+async def new_user(
+    response: Response,
     auth_service: AuthService = Depends(get_auth_service),
-) -> SigninResponse:
-    access_token, refresh_token = auth_service.signin()
-    return SigninResponse(access_token=access_token, refresh_token=refresh_token)
+):
+    user = auth_service.new_user()
+
+    response.set_cookie(
+        key="user_id",
+        value=user.id,
+        httponly=True,
+        expires=datetime.now(timezone.utc) + timedelta(days=365),
+    )
 
 
-@router.post("/relogin")
-async def relogin(
-    re_login_request: ReLoginRequest,
-    auth_service: AuthService = Depends(get_auth_service),
-) -> ReLoginResponse:
-    access_token, refresh_token = auth_service.re_login(re_login_request.refresh_token)
-    return ReLoginResponse(access_token=access_token, refresh_token=refresh_token)
+@router.get("/checkUser", dependencies=[Depends(get_current_user)])
+async def check_user():
+    pass
