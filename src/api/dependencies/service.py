@@ -10,7 +10,6 @@ from ...infer.playlist import PlaylistIdExtractor
 from ...infer.song import SongExtractor
 from ...db import (
     UserRepository,
-    AuthRepository,
     PlaylistRepository,
     InferenceRepository,
     SongRepository,
@@ -22,9 +21,8 @@ from ...log.logger import get_user_logger
 def get_auth_service(
     config: AppConfig = Depends(get_app_config),
     user_repository: UserRepository = Depends(get_repository(UserRepository)),
-    auth_repository: AuthRepository = Depends(get_repository(AuthRepository)),
 ) -> AuthService:
-    return AuthService(config, user_repository, auth_repository)
+    return AuthService(config, user_repository)
 
 
 def get_feedback_service(
