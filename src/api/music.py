@@ -1,14 +1,21 @@
 from fastapi import APIRouter, UploadFile, File, Depends
-from src.dto.music import RecommendMusicRequest, RecommendMusicResponse
-from src.services.music import MusicService
+
+from .dependencies.service import get_music_service
+from .dependencies.auth import get_current_user
+from ..dto.response.music import RecommendMusicResponse
+from ..dto.request.music import RecommendMusicRequest
+from ..services.music import MusicService
+from ..db import User
 
 
-music_service = MusicService()
 router = APIRouter()
 
 
 @router.post("/recommendMusic")
 async def recommend_music(
-    image: UploadFile = File(...), data: RecommendMusicRequest = Depends(RecommendMusicRequest.as_form)
+    image: UploadFile = File(...),
+    data: RecommendMusicRequest = Depends(RecommendMusicRequest.as_form),
+    user: User = Depends(get_current_user),
+    music_service: MusicService = Depends(get_music_service),
 ) -> RecommendMusicResponse:
-    return music_service.recommend_music(image, data)
+    return music_service.recommend_music(user, image, data)

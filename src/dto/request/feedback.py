@@ -2,6 +2,6 @@ from pydantic import BaseModel
 
 
 class UserFeedbackRequest(BaseModel):
-    session_id: str
-    song_id: int
+    song_id: str
+    inference_id: str
     is_like: bool

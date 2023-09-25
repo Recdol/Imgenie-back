@@ -1,60 +1,79 @@
-import pandas as pd
 from fastapi import UploadFile
-from uuid import uuid4
-from src.infer.playlist import PlaylistIdExtractor
-from src.infer.song import SongIdExtractor
-from src.infer.spotify import get_spotify_url
-from src.log.logger import get_user_logger
-from src.dto.music import RecommendMusicRequest, RecommendMusicResponse, RecommendMusic
-from src.services.utils import save_file, resize_img
+from logging import Logger
+from PIL import Image
+import os
 
-pl_k = 15
+from ..infer.playlist import PlaylistIdExtractor
+from ..infer.song import SongExtractor
+from ..dto.response.music import RecommendMusicResponse, RecommendMusic
+from ..dto.request.music import RecommendMusicRequest
+from ..db import (
+    User,
+    Playlist,
+    Song,
+    PlaylistRepository,
+    InferenceRepository,
+    NotFoundPlaylistException,
+)
+from ..config import AppConfig
+
+
 top_k = 6  # song_k must be more than 6 or loop of silder must be False
-SIZE = 224
+IMG_PATH = "outputs/userImgs/"
 
 
 class MusicService:
-    def __init__(self) -> None:
-        self.user_logger = get_user_logger()
+    def __init__(
+        self,
+        config: AppConfig,
+        logger: Logger,
+        playlist_repository: PlaylistRepository,
+        inference_respository: InferenceRepository,
+        playlist_id_ext: PlaylistIdExtractor,
+        song_ext: SongExtractor,
+    ) -> None:
+        self.config = config
+        self.user_logger = logger
+        self.playlist_repository = playlist_repository
+        self.inference_repository = inference_respository
+        self.playlist_id_ext = playlist_id_ext
+        self.song_ext = song_ext
 
-        self.playlist_id_ext = PlaylistIdExtractor(k=pl_k, is_data_pull=True)
-        self.song_id_ext = SongIdExtractor(is_data_pull=True)
+    def recommend_music(
+        self, user: User, image: UploadFile, data: RecommendMusicRequest
+    ) -> RecommendMusicResponse:
+        img_path = self._save_query_image(user, image)
 
-    def recommend_music(self, image: UploadFile, data: RecommendMusicRequest) -> list[RecommendMusic]:
-        session_id = str(uuid4()).replace("-", "_")
-        img_path = save_file(session_id, image)
-        resize_img(img_path, SIZE)
+        playlists, pl_scores = self._extract_playlists(img_path)
+        songs = self._extract_songs(data.genres, playlists, pl_scores, top_k)
 
-        pl_ids, pl_scores = self._extract_playlist_ids(img_path)
-        song_df = self._extract_songs(data.genres, pl_ids, pl_scores, top_k)
-
-        songs = [
+        recommend_musics = [
             RecommendMusic(
-                song_id=int(song_df.iloc[i]["song_id"]),
-                song_title=song_df.iloc[i]["song_title"],
-                artist_name=song_df.iloc[i]["artist_name"],
-                album_title=song_df.iloc[i]["album_title"],
-                music_url=song_df.iloc[i]["music_url"],
+                song_id=song.id,
+                song_title=song.title,
+                artist_name=song.artist.name,
+                album_title=song.album.name,
+                music_url=song.spotify_url,
             )
-            for i in range(song_df.shape[0])
+            for song in songs
         ]
 
-        self.user_logger.info(
-            {
-                "session_id": session_id,
-                "Img Path": img_path,
-                "Genres": data.genres,
-                "Playlist IDs": pl_ids,
-                "Recommend Songs": songs,
-            }
+        inference = self.inference_repository.create_inference(
+            user=user,
+            query_image_url=img_path,
+            query_genres=data.genres,
+            output_playlists=set(playlists),
+            output_songs=set(songs),
         )
 
-        return RecommendMusicResponse(session_id=session_id, songs=songs)
+        return RecommendMusicResponse(inference_id=inference.id, songs=recommend_musics)
 
-    def _extract_playlist_ids(self, img_path: str) -> tuple[list[int], list[float]]:
+    def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []
 
-        weather_scores, weather_ids = self.playlist_id_ext.get_weather_playlist_id(img_path)
+        weather_scores, weather_ids = self.playlist_id_ext.get_weather_playlist_id(
+            img_path
+        )
         sit_scores, sit_ids = self.playlist_id_ext.get_mood_playlist_id(img_path)
         mood_scores, mood_ids = self.playlist_id_ext.get_sit_playlist_id(img_path)
 
@@ -65,8 +84,39 @@ class MusicService:
         pl_ids.extend(sit_ids)
         pl_ids.extend(mood_ids)
 
-        return pl_ids, pl_scores
+        playlists = [self._find_pl_by_genie_id(str(pl_id)) for pl_id in pl_ids]
+        return playlists, pl_scores
 
-    def _extract_songs(self, genres: list[str], pl_ids: list[int], pl_scores: list[float], top_k: int) -> pd.DataFrame:
-        song_infos = self.song_id_ext.get_song_info(pl_ids, pl_scores, genres)
-        return get_spotify_url(song_infos, top_k)
+    def _extract_songs(
+        self,
+        genres: list[str],
+        playlists: list[Playlist],
+        pl_scores: list[float],
+        top_k: int,
+    ) -> list[Song]:
+        songs = self.song_ext.extract_songs(playlists, pl_scores, genres)
+        return songs[:top_k]
+
+    def _find_pl_by_genie_id(self, genie_id: str):
+        found = self.playlist_repository.find_by_genie_id(genie_id)
+        if found is None:
+            raise NotFoundPlaylistException(
+                f"DB에서 genie_id={genie_id}인 playlist를 찾을 수 없습니다!"
+            )
+        return found
+
+    def _save_query_image(self, user: User, image: UploadFile) -> str:
+        os.makedirs(IMG_PATH, exist_ok=True)
+
+        img_path = os.path.join(IMG_PATH, f"{user.id}.jpg")
+        with open(img_path, "wb+") as file_object:
+            file_object.write(image.file.read())
+
+        self._resize_query_image(img_path)
+
+        return img_path
+
+    def _resize_query_image(self, img_path: str) -> None:
+        with Image.open(img_path) as im:
+            resized = im.resize((self.config.image_size, self.config.image_size))
+            resized.save(img_path)
