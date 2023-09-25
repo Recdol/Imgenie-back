@@ -1,0 +1,61 @@
+name: Deploy back release app
+
+on:
+  push:
+    branches: ["main"]
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          submodules: true
+
+      - name: Load datasets
+        working-directory: ${{ env.GITHUB_WORKSPACE }}
+        run: |-
+          mkdir hub
+          git clone https://huggingface.co/datasets/RecDol/PLAYLIST_inference hub/PLAYLIST
+          git clone https://huggingface.co/datasets/RecDol/faiss_index_inference hub/faiss_index
+
+      - name: Login to docker hub
+        uses: docker/login-action@v2
+        with:
+          username: ${{ secrets.DOKERHUB_USERNAME }}
+          password: ${{ secrets.DOKERHUB_PASSWORD }}
+
+      - name: Build and push to docker hub
+        uses: docker/build-push-action@v4
+        with:
+          context: .
+          file: Dockerfile.prod
+          push: true
+          tags: recdolserver/imgenie-back-release
+
+      - name: google auth
+        id: "auth"
+        uses: "google-github-actions/auth@v1"
+        with:
+          credentials_json: "${{ secrets.GCE_SA_KEY }}"
+
+      - name: set up Cloud SDK
+        uses: "google-github-actions/setup-gcloud@v1"
+        with:
+          project_id: ${{ secrets.PROJECT_ID }}
+
+      - name: use gcloud cli
+        run: "gcloud info"
+
+      - name: gcp deploy
+        run: |-
+          gcloud compute instances update-container "${{ secrets.BACK_RELEASE_GCE_INSTANCE }}" \
+            --zone "${{ secrets.BACK_RELEASE_GCE_INSTANCE_ZONE }}" \
+            --container-image "docker.io/recdolserver/imgenie-back-release" \
+            --container-env PORT=80,DB_HOST="${{ secrets.BACK_RELEASE_DB_HOST }}",DB_NAME="${{ secrets.BACK_RELEASE_DB_NAME }}",DB_USERNAME="${{ secrets.BACK_RELEASE_DB_USERNAME }}",DB_PASSWORD="${{ secrets.BACK_RELEASE_DB_PASSWORD }}",IS_DEV=false
+
+      - name: gcp reset
+        run: |-
+          gcloud compute instances reset "${{ secrets.BACK_RELEASE_GCE_INSTANCE }}" \
+            --zone "${{ secrets.back_RELEASE_GCE_INSTANCE_ZONE }}"
