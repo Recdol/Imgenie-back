@@ -53,7 +53,12 @@ jobs:
           gcloud compute instances update-container "${{ secrets.BACK_DEV_GCE_INSTANCE }}" \
             --zone "${{ secrets.BACK_DEV_GCE_INSTANCE_ZONE }}" \
             --container-image "docker.io/recdolserver/imgenie-back-dev" \
-            --container-env PORT=80,DB_HOST="${{ secrets.BACK_DEV_DB_HOST }}",DB_NAME="${{ secrets.BACK_DEV_DB_NAME }}",DB_USERNAME="${{ secrets.BACK_DEV_DB_USERNAME }}",DB_PASSWORD="${{ secrets.BACK_DEV_DB_PASSWORD }}",JWT_SECRET="${{ secrets.BACK_DEV_JWT_SECRET }}"
+            --container-env PORT=80, \
+              DB_HOST="${{ secrets.BACK_DEV_DB_HOST }}", \
+              DB_NAME="${{ secrets.BACK_DEV_DB_NAME }}", \
+              DB_USERNAME="${{ secrets.BACK_DEV_DB_USERNAME }}", \
+              DB_PASSWORD="${{ secrets.BACK_DEV_DB_PASSWORD }}", \
+              IS_DEV="${{ secrets.BACK_DEV_IS_DEV }}"
 
       - name: gcp reset
         run: |-
