@@ -28,6 +28,8 @@ class AppConfig(BaseSettings):
     # image
     image_size: int = 224
 
+    is_dev: bool
+
     class Config:
         frozen = True
         env_file = ".env"
