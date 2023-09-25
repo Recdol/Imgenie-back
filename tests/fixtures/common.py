@@ -12,6 +12,7 @@ def mock_config() -> AppConfig:
         db_name="db_name",
         db_username="db_username",
         db_password="db_password",
+        is_dev=True,
     )
 
 
