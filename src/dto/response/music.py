@@ -12,3 +12,4 @@ class RecommendMusic(BaseModel):
 class RecommendMusicResponse(BaseModel):
     inference_id: str
     songs: list[RecommendMusic]
+    image_url: str

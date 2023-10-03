@@ -66,7 +66,12 @@ class MusicService:
             output_songs=set(songs),
         )
 
-        return RecommendMusicResponse(inference_id=inference.id, songs=recommend_musics)
+        img_name = img_path.split("/")[-1]
+        img_url = os.path.join("image", img_name)
+
+        return RecommendMusicResponse(
+            inference_id=inference.id, songs=recommend_musics, image_url=img_url
+        )
 
     def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []
