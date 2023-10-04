@@ -1,6 +1,7 @@
 from fastapi import UploadFile
 from logging import Logger
 from PIL import Image
+from datetime import datetime
 import os
 
 from ..infer.playlist import PlaylistIdExtractor
@@ -66,7 +67,12 @@ class MusicService:
             output_songs=set(songs),
         )
 
-        return RecommendMusicResponse(inference_id=inference.id, songs=recommend_musics)
+        img_name = img_path.split("/")[-1]
+        img_url = os.path.join("image", img_name)
+
+        return RecommendMusicResponse(
+            inference_id=inference.id, songs=recommend_musics, image_url=img_url
+        )
 
     def _extract_playlists(self, img_path: str) -> tuple[list[Playlist], list[float]]:
         pl_scores, pl_ids = [], []
@@ -105,10 +111,10 @@ class MusicService:
             )
         return found
 
-    def _save_query_image(self, user: User, image: UploadFile) -> str:
+    def _save_query_image(self, image: UploadFile) -> str:
         os.makedirs(IMG_PATH, exist_ok=True)
 
-        img_path = os.path.join(IMG_PATH, f"{user.id}.jpg")
+        img_path = os.path.join(IMG_PATH, f"{datetime.utcnow()}.jpg")
         with open(img_path, "wb+") as file_object:
             file_object.write(image.file.read())
 
