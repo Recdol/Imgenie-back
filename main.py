@@ -16,7 +16,7 @@ db.connect(
     password=config.db_password,
 )
 
-app = FastAPI(version="1.2")
+app = FastAPI(version="1.3")
 app.include_router(api.router)
 add_exception_handler(app)
 
