@@ -1,6 +1,7 @@
 import os
 import faiss
 import datasets
+from typing import Iterable
 from PIL import Image
 from datasets import Dataset, DatasetDict
 from huggingface_hub import Repository
@@ -28,9 +29,21 @@ class PlaylistIdExtractor:
 
         # set data path
         self.DATA_PATH = os.path.join(config.hub_path, "PLAYLIST")
-        self.MOOD_DATA_PATH = os.path.join(self.DATA_PATH, "mood")
-        self.SIT_DATA_PATH = os.path.join(self.DATA_PATH, "sit")
-        self.WEATHER_DATA_PATH = os.path.join(self.DATA_PATH, "weather")
+        mood_base_path = os.path.join(self.DATA_PATH, "mood")
+        sit_base_path = os.path.join(self.DATA_PATH, "sit")
+        weather_base_path = os.path.join(self.DATA_PATH, "weather")
+        self.MOOD_DATA_PATHS = [
+            os.path.join(mood_base_path, version)
+            for version in config.mood_dataset_versions
+        ]
+        self.SIT_DATA_PATHS = [
+            os.path.join(sit_base_path, version)
+            for version in config.sit_dataset_versions
+        ]
+        self.WEATHER_DATA_PATHS = [
+            os.path.join(weather_base_path, version)
+            for version in config.weather_dataset_versions
+        ]
 
         # set faiss path
         self.FAISS_PATH = os.path.join(config.hub_path, "faiss_index")
@@ -44,13 +57,10 @@ class PlaylistIdExtractor:
             self.FAISS_PATH, f"mood/{config.mood_index_version}.index"
         )
 
-    def _read_dataset(self, data_dir: str) -> Dataset:
-        dir_list = os.listdir(data_dir)
-
+    def _read_dataset(self, data_paths: Iterable[str]) -> Dataset:
         dsets: list[Dataset | DatasetDict] = []
-        for dir in dir_list:
-            dataset_dir_path = os.path.join(data_dir, dir)
-            cur_dataset = datasets.load_from_disk(dataset_dir_path)
+        for data_path in data_paths:
+            cur_dataset = datasets.load_from_disk(data_path)
             dsets.append(cur_dataset)
 
         return datasets.concatenate_datasets(dsets)
